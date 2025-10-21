@@ -1,16 +1,55 @@
 name: Terraform
-on: [push, pull_request]
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/terraform.yml'
+  pull_request:
+    branches: [ main, develop  ]
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/terraform.yml'
+  workflow_dispatch:
+
 jobs:
   terraform:
+    name: Terraform Validation
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
-      - run: cd terraform && terraform init -input=false
-      - run: cd terraform && terraform fmt -check
-      - run: cd terraform && terraform validate
-      - run: cd terraform && terraform plan -out=tfplan
-      - uses: actions/upload-artifact@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.6"
+
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -input=false -out=tfplan -no-color
+
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v4
         with:
           name: tfplan
           path: terraform/tfplan
+          retention-days: 5

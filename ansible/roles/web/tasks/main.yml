@@ -1,3 +1,46 @@
-- name: Placeholder
-  debug:
-    msg: "Implement web role tasks"
+---
+- name: Ensure temp directory exists
+  ansible.builtin.file:
+    path: "/tmp/{{ web_project_name }}"
+    state: directory
+    mode: '0755'
+
+- name: Create nginx configuration
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: "/tmp/{{ web_project_name }}/default.conf"
+    mode: '0644'
+
+- name: Copy nginx configuration to container
+  ansible.builtin.command:
+    cmd: >
+      docker cp /tmp/{{ web_project_name }}/default.conf
+      {{ web_nginx_container_name }}:/etc/nginx/conf.d/default.conf
+  register: web_nginx_config
+  changed_when: web_nginx_config.rc == 0
+  notify: Reload nginx
+
+- name: Create index.php
+  ansible.builtin.template:
+    src: index.php.j2
+    dest: "/tmp/{{ web_project_name }}/index.php"
+    mode: '0644'
+
+- name: Copy PHP file to container
+  ansible.builtin.command:
+    cmd: >
+      docker cp /tmp/{{ web_project_name }}/index.php
+      {{ web_php_container_name }}:/var/www/html/index.php
+  register: web_php_config
+  changed_when: web_php_config.rc == 0
+  notify: Restart php-fpm
+
+- name: Verify nginx configuration
+  ansible.builtin.command:
+    cmd: "docker exec {{ web_nginx_container_name }} nginx -t"
+  changed_when: false
+
+- name: Clean up temp files
+  ansible.builtin.file:
+    path: "/tmp/{{ web_project_name }}"
+    state: absent

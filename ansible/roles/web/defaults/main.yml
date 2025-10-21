@@ -1,0 +1,6 @@
+---
+web_project_name: "test_assignment"
+web_app_env: "dev"
+web_nginx_container_name: "{{ web_project_name }}_nginx"
+web_php_container_name: "{{ web_project_name }}_php"
+web_host_port: 8080

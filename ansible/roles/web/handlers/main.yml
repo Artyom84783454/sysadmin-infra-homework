@@ -1,0 +1,18 @@
+---
+- name: Restart nginx
+  ansible.builtin.command:
+    cmd: "docker restart {{ web_nginx_container_name }}"
+  changed_when: true
+  become: false
+
+- name: Reload nginx
+  ansible.builtin.command:
+    cmd: "docker exec {{ web_nginx_container_name }} nginx -s reload"
+  changed_when: true
+  become: false
+
+- name: Restart php-fpm
+  ansible.builtin.command:
+    cmd: "docker restart {{ web_php_container_name }}"
+  changed_when: true
+  become: false

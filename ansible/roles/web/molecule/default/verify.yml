@@ -1,0 +1,27 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Check if nginx is running
+      ansible.builtin.command:
+        cmd: systemctl status nginx
+      register: web_nginx_status
+      changed_when: false
+
+    - name: Check if php-fpm is running
+      ansible.builtin.command:
+        cmd: systemctl status php-fpm
+      register: web_php_status
+      changed_when: false
+
+    - name: Verify nginx config exists
+      ansible.builtin.stat:
+        path: /etc/nginx/conf.d/default.conf
+      register: web_nginx_conf
+
+    - name: Assert results
+      ansible.builtin.assert:
+        that:
+          - "'active (running)' in web_nginx_status.stdout"
+          - "'active (running)' in web_php_status.stdout"
+          - web_nginx_conf.stat.exists
