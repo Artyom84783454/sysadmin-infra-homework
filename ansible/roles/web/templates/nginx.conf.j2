@@ -22,7 +22,7 @@ server {
     
     # PHP processing via FastCGI
     location ~ \.php$ {
-        fastcgi_pass {{ project_name }}_php:9000;
+        fastcgi_pass {{ web_project_name }}_php:9000;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         fastcgi_param APP_ENV {{ app_env | default("dev") }};
